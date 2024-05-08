@@ -48,47 +48,53 @@ class AsYouTypeFormatter extends TextInputFormatter {
 
       formatAsYouType(input: textToParse).then(
         (String? value) {
-          String parsedText = parsePhoneNumber(value);
+          try {
+            String parsedText = parsePhoneNumber(value);
 
-          int offset =
-              newValue.selection.end == -1 ? 0 : newValue.selection.end;
+            int offset =
+                newValue.selection.end == -1 ? 0 : newValue.selection.end;
 
-          if (separatorChars.hasMatch(parsedText)) {
-            String valueInInputIndex = parsedText[offset - 1];
+            if (separatorChars.hasMatch(parsedText)) {
+              String valueInInputIndex = parsedText[offset - 1];
 
-            if (offset < parsedText.length) {
-              int offsetDifference = parsedText.length - offset;
+              if (offset < parsedText.length) {
+                int offsetDifference = parsedText.length - offset;
 
-              if (offsetDifference < 2) {
-                if (separatorChars.hasMatch(valueInInputIndex)) {
-                  offset += 1;
-                } else {
-                  bool isLastChar;
-                  try {
-                    var _ = newValueText[newValue.selection.end];
-                    isLastChar = false;
-                  } on RangeError {
-                    isLastChar = true;
-                  }
-                  if (isLastChar) {
-                    offset += offsetDifference;
-                  }
-                }
-              } else {
-                if (parsedText.length > offset - 1) {
+                if (offsetDifference < 2) {
                   if (separatorChars.hasMatch(valueInInputIndex)) {
                     offset += 1;
+                  } else {
+                    bool isLastChar;
+                    try {
+                      var _ = newValueText[newValue.selection.end];
+                      isLastChar = false;
+                    } on RangeError {
+                      isLastChar = true;
+                    }
+                    if (isLastChar) {
+                      offset += offsetDifference;
+                    }
+                  }
+                } else {
+                  if (parsedText.length > offset - 1) {
+                    if (separatorChars.hasMatch(valueInInputIndex)) {
+                      offset += 1;
+                    }
                   }
                 }
               }
-            }
 
-            this.onInputFormatted(
-              TextEditingValue(
-                text: parsedText,
-                selection: TextSelection.collapsed(offset: offset),
-              ),
-            );
+              this.onInputFormatted(
+                TextEditingValue(
+                  text: parsedText,
+                  selection: TextSelection.collapsed(offset: offset),
+                ),
+              );
+            }
+          } on RangeError catch (_) {
+            // Ignore Range Errors
+          } catch (e) {
+            rethrow;
           }
         },
       );
