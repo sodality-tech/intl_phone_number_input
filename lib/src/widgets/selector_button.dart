@@ -68,6 +68,11 @@ class SelectorButton extends StatelessWidget {
             minWidth: 0,
             onPressed: countries.isNotEmpty && countries.length > 1 && isEnabled
                 ? () async {
+                    if (selectorConfig.onSelectorTap != null) {
+                      selectorConfig.onSelectorTap!(
+                          country, countries, onCountryChanged);
+                      return;
+                    }
                     Country? selected;
                     if (selectorConfig.selectorType ==
                         PhoneInputSelectorType.BOTTOM_SHEET) {
