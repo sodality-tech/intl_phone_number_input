@@ -441,7 +441,6 @@ class _InputWidgetView
               onSaved: state.onSaved,
               scrollPadding: widget.scrollPadding,
               inputFormatters: [
-                LengthLimitingTextInputFormatter(widget.maxLength),
                 widget.formatInput
                     ? AsYouTypeFormatter(
                         isoCode: countryCode,
@@ -451,6 +450,7 @@ class _InputWidgetView
                         },
                       )
                     : FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(widget.maxLength),
               ],
               onChanged: state.onChanged,
             ),
