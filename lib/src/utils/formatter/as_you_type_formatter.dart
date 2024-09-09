@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/services.dart';
 import 'package:intl_phone_number_input/src/utils/phone_number/phone_number_util.dart';
 
@@ -38,67 +40,70 @@ class AsYouTypeFormatter extends TextInputFormatter {
     if (newValueLength > 0 && newValueLength > oldValueLength) {
       String newValueText = newValue.text;
       String rawText = newValueText.replaceAll(separatorChars, '');
-      String textToParse = dialCode + rawText;
 
-      final _ = newValueText
-          .substring(
-              oldValue.selection.start == -1 ? 0 : oldValue.selection.start,
-              newValue.selection.end == -1 ? 0 : newValue.selection.end)
-          .replaceAll(separatorChars, '');
+      int rawCursorPosition = newValue.selection.end;
+
+      int digitsBeforeCursor = 0, digitsAfterCursor = 0;
+
+      if (rawCursorPosition > 0 && rawCursorPosition <= newValueText.length) {
+        final rawTextBeforeCursor = newValueText
+            .substring(0, rawCursorPosition)
+            .replaceAll(separatorChars, '');
+        final rawTextAfterCursor = newValueText
+            .substring(rawCursorPosition)
+            .replaceAll(separatorChars, '');
+
+        digitsBeforeCursor = rawTextBeforeCursor.length;
+        digitsAfterCursor = rawTextAfterCursor.length;
+      }
+
+      String textToParse = dialCode + rawText;
 
       formatAsYouType(input: textToParse).then(
         (String? value) {
           try {
             String parsedText = parsePhoneNumber(value);
 
-            int offset =
-                newValue.selection.end == -1 ? 0 : newValue.selection.end;
+          int newCursorPosition = 0;
 
-            if (separatorChars.hasMatch(parsedText)) {
-              String valueInInputIndex = parsedText[offset - 1];
+          if (digitsBeforeCursor > 0 || digitsAfterCursor > 0) {
+            for (var i = 0; i < parsedText.length; i++) {
+              final startCursor = i;
 
-              if (offset < parsedText.length) {
-                int offsetDifference = parsedText.length - offset;
-
-                if (offsetDifference < 2) {
-                  if (separatorChars.hasMatch(valueInInputIndex)) {
-                    offset += 1;
-                  } else {
-                    bool isLastChar;
-                    try {
-                      var _ = newValueText[newValue.selection.end];
-                      isLastChar = false;
-                    } on RangeError {
-                      isLastChar = true;
-                    }
-                    if (isLastChar) {
-                      offset += offsetDifference;
-                    }
-                  }
+              if (allowedChars.hasMatch(parsedText[startCursor])) {
+                if (digitsBeforeCursor > 0) {
+                  digitsBeforeCursor--;
                 } else {
-                  if (parsedText.length > offset - 1) {
-                    if (separatorChars.hasMatch(valueInInputIndex)) {
-                      offset += 1;
-                    }
-                  }
+                  newCursorPosition = startCursor + 1;
+                  break;
                 }
               }
 
-              this.onInputFormatted(
-                TextEditingValue(
-                  text: parsedText,
-                  selection: TextSelection.collapsed(offset: offset),
-                ),
-              );
+              final endCursor = parsedText.length - 1 - i;
+
+              if (allowedChars.hasMatch(parsedText[endCursor])) {
+                if (digitsAfterCursor > 0) {
+                  digitsAfterCursor--;
+                } else {
+                  newCursorPosition = endCursor + 1;
+                  break;
+                }
+              }
             }
-          } on RangeError catch (_) {
-            // Ignore Range Errors
-          } catch (e) {
-            rethrow;
           }
+
+          newCursorPosition = min(max(newCursorPosition, 0), parsedText.length);
+
+          this.onInputFormatted(
+            TextEditingValue(
+              text: parsedText,
+              selection: TextSelection.collapsed(offset: newCursorPosition),
+            ),
+          );
         },
       );
     }
+
     return newValue;
   }
 
