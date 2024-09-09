@@ -61,8 +61,7 @@ class AsYouTypeFormatter extends TextInputFormatter {
 
       formatAsYouType(input: textToParse).then(
         (String? value) {
-          try {
-            String parsedText = parsePhoneNumber(value);
+          String parsedText = parsePhoneNumber(value);
 
           int newCursorPosition = 0;
 
