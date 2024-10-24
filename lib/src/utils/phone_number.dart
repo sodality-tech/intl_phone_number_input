@@ -72,7 +72,7 @@ class PhoneNumber extends Equatable {
     return PhoneNumber(
       phoneNumber: internationalPhoneNumber,
       dialCode: regionInfo.regionPrefix,
-      isoCode: regionInfo.isoCode,
+      isoCode: regionInfo.isoCode ?? isoCode,
     );
   }
 
